@@ -40,7 +40,7 @@ to insert sliders into your pages.
   3. When creating a
   slider using javascript, an object is returned and can be used to access the API for that slider later in your code. When a slider
   is created by the range-slider script in response to finding an html element contained in the document, no such object is returned.
-  Instead, the object is created and appended to a global object named "mpRangeSliders". If you provide a sliderId, you'll be able
+  Instead, an object is created and appended to a global object named "mpRangeSliders". If you provide a sliderId, you'll be able
   to acceess that object by simply referencing "mpRangeSliders[\<sliderId\>]". If you omit the sliderId, you will not be able to
   reference the object directly but it will still exist and you may still be able to interact with it using callbacks as explain
   in the section below on "Interacting with the Multipurpose Range Slider".
