@@ -96,3 +96,48 @@ the slider can be positioned by clicking on the slider bar.
 * **onCreate** *(type: function, attribute: data-on-create, default: null)*: Callback function to be called when slider is created.
 * **onMove** *(type: function, attribute: data-on-move, default: null)*: Callback function to be called on each slider move event.
 * **onStop** *(type: functon, attribute: data-on-stop, default: null)*: Callback function to be called when slider stops moving (mouseup or touchend events).
+
+### Interacting with the Multipurpose Range Slider
+
+There are several ways in which you can interact with a Multipurpose Range Slider. The slider can be manipulated through its user interface on a webpage. Users can move the sliders by clicking and dragging with a mouse or tapping and dragging with a finger or pointer on a touch enabled device. Moving the sliders will change the from and to values accordingly. If a device is equipped with a keyboard, the sliders will also respond to certain keypress events. Numbers, backspace, escape and enter keypresses are captured and processed. A slider control with single set to true will also respond to mouse clicks along its slider bar.
+
+Another way to interact with your Multiplurpose Range Slider is to assign callbacks to certain events that a slider exposes. The callbacks must be functions in your script. When certain events occur during a slider control's lifetime, the slider will call the function that is assigned to that event, if there is one. The functions are bound to the slider so when they are called your function will have access to a "this" object that is the public API of the slider control that the event occurred in. This enables your function to determine which slider the event originated in, if you have more than one slider on your page, and to access and change that slider's properties. The public API is discussed below.
+
+The events you can assign callbacks to are:
+* **onCreate** - This event will only ever fire one time, when a slider is created. It may be useful in cases where you intend to use your slider to control other elements on your page. You can initialize the other element at the time the slider is created and then keep the other element in sync with the slider by using one or both of the other events.
+* **onMove** - This event will fire every time the top or bottom slider is moved and a mousemove or touchmove event ocurrs. Any function you assign to this event should be as efficient as possible since it may get called many times in rapid succession.
+* **onUpdate** - This event only fires when the top or bottom slider is finished moving and the values are updated. Please note that if the values are updated programatically through the use of the publicAPI, this callback will not be called. If you do that, you need to remember to handle that with your code.
+
+In addition to interacting with the slider's user interface and providing callbacks, some slider properties and functions can also be accessed and manipulated programatically by using the API that is provided by the object returned when the slider is created. When you create a slider programitically, you can save the returned object using your own variable and use it to access the API. If you use a div element with data-type="mpRangeSlider" to create a slider, an mpRangeSlider object will be added to the global mpRangeSliders object. mpRangeSliders is simply a container for the objects that are returned when a slider is created. If you want to be able to interact with a slider's API directly, you should be sure to provide a data-slider-id attribute with a unique name in the div element that you use to create your slider in the first place. If you've done that, you will be able to access the slider's API simply by referring to mpRangeSliders["\<yourSliderId\>"]. If no data-slider-id attribute is provided, the object will still be included in the mpRangeSliders object but you will not be able to call it directly.
+
+The API consists of one property and four functions listed below. One way to access the API is to use the "this" object inside one of your callback functions. That way, you can use one function as a callback for multiple sliders.
+* **id**: a property that references the id of the slider control element. This property will be null if no sliderId was provided at the time the slider control was created. It may be helpful when you have more than one slider on your page and you're using the same callback function for multiple slider controls.
+* **get**: *(get( null | string | array ))* a function that returns one or more properties. If no parameter is provided, an object with 11 key-value pairs will be returned. If a single string value is provided, the function will return a single value. If an array is provided, the function will return an object containing key-value pairs for each string value in the array, if the string value matches one of the property names listed below:
+  * **from**: the from value
+  * **to**: the to value
+  * **incrementTop**: the increment (step) of the top slider
+  * **incrementBottom**: the increment (step) of the bottom slider
+  * **topStart**: the left boundary of the top slider
+  * **topEnd**: the right boundary of the top slider
+  * **bottomStart**: the left boundary of the bottom slider
+  * **bottomEnd**: the right boundary of the bottom slider
+  * **collision**: the string value of the collision setting
+  * **label**: the text above the slider
+  * **update**: the setting that controls when the values are updated
+* **set**: *(set( {key: value, key: value, ...} ))* a function that requires an object containing key-value pairs. Many, but not all, of the slider's properties can be modified without recreating the slider. This is helpful if you want to change some aspect of a slider without losing any of its other settings. The function allows you to set the values for any or all of the following slider properties:
+  * from
+  * to
+  * boundaries
+  * increments
+  * collision
+  * label
+  * labelRange
+  * update
+
+For example, to set the collision property to "push", you would call slider.set({collision: "push"}). (See the Properties and Attributes section above for the explanation of each setting and the correct type for the values.)
+
+Take note that changing some of these properties may cause a slider to adjust some other values. For example, If you set new boundaries for the top slider and, as a result, the from value is now outside of the top boundaries, the from value will be adjusted to equal the closest boundary value. Another example of a change that might not be expcected is when the collision setting is changed from "pass" to "push" or "stop", and the top slider is to the right of the bottom slider before that change is made, then the bottom slider will be moved to the same position as the top slider and the to value will be adjusted accordingly.
+* **sizeSlider**: *(sizeSlider( [width] ))* a function that will resize the slider control's elements based on the width parameter or the width of its parent element if no parameter is provided. When a slider control is created, the script will attempt to size it based on its parent container's width. If that container is not visible at the time of creation, then it will use a fixed set of css rules. Once it becomes visible the script will try to size it again. In some environments, it may not be possible to know when it becomes visible. Finally, if the window is resized, the slider control will be resized. If it wasn't sized properly before then, the change may create a noticeable or even undesireable shift in page elements. To avoid this, if you know the width of the containing element and you know that it won't be visible at the time that the slider is created, you can use this function to size the slider before it does become visible. If you don't know the size of its containing element, but your code is responsible for making it visible, then you can use this function to size the slider at the time you make it visible. If you call it at that time, you will not need to provide a width because the function will automatically determine the width of the containing element. It's unlikely that you will need to use this function but if you notice your slider not sizing properly when it first appears on your page, you may want to try calling this function.
+* **disable**: *(disable( [true | false] ))* a function that disables or enables a slider control. Calling disable with no parameter or true as the parameter will disable a slider control if it is not already disabled. Calling this function with a parameter of false will re-enable the slider if it had been disabled before.
+
+One more way to interact with your slider controls is to use the hidden inputs that are created when a sliderId or a data-slider-id attribute is provided at the time the slider is created. The values of those inputs are kept in sync with the slider's from and to values. You can simply reference those values when you need them or add an event listener to the input's change event. 
