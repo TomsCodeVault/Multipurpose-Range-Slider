@@ -63,10 +63,7 @@ the other slider. if set to "push", the other slider will be moved along with th
 other. If the top and bottom boundaries or the top and bottom increments are not the same, this setting will be overwritten to be "pass". When set to
 "pass", if the top and bottom boundaries and increments are the same, the *range bar* will turn from blue to red when the top slider is to the right of
 the bottom slider. If the boundaries or increments differ for the top and bottom sliders, the *range bar* will no longer be visible.
-* **update** *(type: string ["onStop" | "onMove"], attribute: data-update, default: "onStop")*: This setting determines when the top and bottom slider
-values are updated. If set to "onMove", the values displayed on the sides of the slider bar will be updated as the slider is moved. If set to "onStop",
-those values will not be updated until the slider movement has stopped. To help determine the value of the slider as it is moved when set to "onStop",
-a round element, offset slightly from the moving slider, will appear and display the slider's current position along the slider bar.
+* **update** *(type: string ["onStop" | "onMove"], attribute: data-update, default: "onStop")*: This setting determines when the top and bottom slider values are updated. If set to "onMove", the values displayed on each end of the slider bar will be updated as the slider is moved. If set to "onStop", those values will not be updated until the slider movement has stopped. To help indicate the value of the slider as it is moved when set to "onStop", a rectangular element will appear above the slider and display the slider's current position along the slider bar.
 * **disabled** *(type: boolean, attribute: data-disabled, default: false)*: When set to true, the slider control will be "grayed out" and not respond
 to mouse or touch events.
 
