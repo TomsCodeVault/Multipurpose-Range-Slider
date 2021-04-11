@@ -25,7 +25,7 @@ to insert sliders into your pages.
   };
   const sliderObj = newMpRangeSlider(ele, options);
   ```
-  There are 20 properties that can be specified in the options object. All are optional. Each property has an associated *data* attribute that can be
+  There are 21 properties that can be specified in the options object. All are optional. Each property has an associated *data* attribute that can be
   used inside a div element to create a slider without using javascript.
   
 ## Properties and Attributes
@@ -66,7 +66,7 @@ the bottom slider. If the boundaries or increments differ for the top and bottom
 * **update** *(type: string ["onStop" | "onMove"], attribute: data-update, default: "onStop")*: This setting determines when the top and bottom slider values are updated. If set to "onMove", the values displayed on each end of the slider bar will be updated as the slider is moved. If set to "onStop", those values will not be updated until the slider movement has stopped. To help indicate the value of the slider as it is moved when set to "onStop", a rectangular element will appear above the slider and display the slider's current position along the slider bar.
 * **disabled** *(type: boolean, attribute: data-disabled, default: false)*: When set to true, the slider control will be "grayed out" and not respond
 to mouse or touch events.
-
+* **enableReset** *(type: boolean, attribute: data-enable-reset, default: true)*: If the slider is inside a form element and the form is reset, the slider will be reset automatically to its original values. If, for some reason, you don't want this to happen, it can be prevented by setting this option to false.
 ### Slider Appearance and Size
 * **label** *(type: string, attribute: data-label, default: "Slider")*: The name displayed above the top left of the slider. If you don't want a label
 to be displayed, you must provide an empty string("") for this setting option. If you don't provide anything for this option, the default "Slider" will
@@ -78,7 +78,7 @@ elements scale in relation to the parent element's width.
 * **fixedSize** *(type: number, attribute: data-fixed-size, default: 18)*: Base font-size in pixels used when sizing is set to "fixed". All other
 elements' sizes are set relative to the font-size. Please note that increasing the size of elements will often result in a shorter slider bar. This is
 because the surrounding elements are larger so the margins of the slider bar have to be increase to accomodate them.
-* **variableMin** *(type: number, attribute: data-variable-min, default: 12)*: Minimum base font-size in pixels used when sizing is set to "variable".
+* **variableMin** *(type: number, attribute: data-variable-min, default: 12)*: Minimum base font-size in pixels used when sizing is set to "variable". If you anticipate your slider being used on small mobile devices, you may want to increase this value slightly to keep the "touch target" from being too small.
 * **variableMax** *(type: number, attribute: data-variable-max, default: 24)*: Maximum base font-size in pixels used when sizing is set to "variable".
 * **sizingFactor** *(type: number [between .5 and 2], attribute: data-sizing-factor, default: 1)*: Factor that influences the slope of the sizing curve.
 The differences when using this setting can be very subtle. The lower the factor, the longer it will take for the elements to reach their maximum size
