@@ -123,6 +123,13 @@ window.addEventListener("load", function() {
         // ignore
       }
     }
+    if(x.getAttribute("data-enable-reset")) {
+      try {
+        options.enableReset = JSON.parse(x.getAttribute("data-enable-reset"));
+      } catch {
+        // ignore
+      }
+    }
     let hostElement = sliders[i];
     if(options.sliderId) {
      mpRangeSliders[options.sliderId] = newMpRangeSlider(hostElement, options);
@@ -165,12 +172,13 @@ function newMpRangeSlider(parentElement, settings) {
     let hideValues = false;
     let single = false;
     let disabled = false;
+    let enableReset = true;
 
     // variables for storing calculations that can be done at time of creation
     let topSteps, bottomSteps, topStart, bottomStart, topEnd, bottomEnd, bottomRange, topRange;
-    let topInverted, bottomInverted, fromInputId, toInputId, noLabel;
+    let topInverted, bottomInverted, fromInputId, toInputId, noLabel, initialFrom, initialTo;
     let numberBuffer = "";
-    let moving = false;
+    let trackClicked = false;
 
     // variables that control how the slider's sizing is controlled.
     let sizing = "variable" // ["fixed" | "variable"]
@@ -195,362 +203,6 @@ function newMpRangeSlider(parentElement, settings) {
         }
       });
     }
-
-    // If sizing is set to "variable", the size of the various slider elements will
-    // change based on the width of its parent element. This table insures that all
-    // elements scale proportionately to each other.
-    const sizeTable = [
-      {
-        selector: ".mprs-triangle.from",
-        attributes: [
-          {
-            attribute: "borderTopWidth",
-            property: "border-top-width",
-            weight: 3.6
-          },
-          {
-            attribute: "borderRightWidth",
-            property: "border-right-width",
-            weight: 1.8
-          },
-          {
-            attribute: "borderLeftWidth",
-            property: "border-left-width",
-            weight: 1.8
-          }
-        ]
-      },
-      {
-        selector: ".mprs-triangle.to",
-        attributes: [
-          {
-            attribute: "borderRightWidth",
-            property: "border-right-width",
-            weight: 1.8
-          },
-          {
-            attribute: "borderBottomWidth",
-            property: "border-bottom-width",
-            weight: 3.6
-          },
-          {
-            attribute: "borderLeftWidth",
-            property: "border-left-width",
-            weight: 1.8
-          }
-        ]
-      },
-      {
-        selector: ".mprs-triangle.from.single",
-        attributes: [
-          {
-            attribute: "borderTopWidth",
-            property: "border-top-width",
-            weight: 5.4
-          },
-          {
-            attribute: "borderLeftWidth",
-            property: "border-left-width",
-            weight: 1.2
-          },
-          {
-            attribute: "borderRightWidth",
-            property: "border-right-width",
-            weight: 1.2
-          }
-        ]
-      },
-      {
-        selector: ".mp-range-slider",
-        attributes: [
-          {
-            attribute: "fontSize",
-            property: "font-size",
-            weight: 4
-          }
-        ]
-      },
-      {
-        selector: ".mprs-label",
-        attributes: [
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: 0
-          },
-          {
-            attribute: "marginRight",
-            property: "margin-right",
-            weight: 0
-          },
-          {
-            attribute: "marginBottom",
-            property: "margin-bottom",
-            weight: 2
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: 5
-          }
-        ]
-      },
-      {
-        selector: ".mprs-current-value.from",
-        attributes: [
-          {
-            attribute: "width",
-            property: "width",
-            weight: 8
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 6
-          },
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: -1
-          },
-          {
-            attribute: "marginRight",
-            property: "margin-right",
-            weight: 1
-          },
-          {
-            attribute: "marginBottom",
-            property: "margin-bottom",
-            weight: 0
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: 1
-          }
-        ]
-      },
-      {
-        selector: ".mprs-current-value.from.single",
-        attributes: [
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: 2
-          },
-        ]
-      },
-      {
-        selector: ".mprs-current-value.to",
-        attributes: [
-          {
-            attribute: "width",
-            property: "width",
-            weight: 8
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 6
-          },
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: 5
-          },
-          {
-            attribute: "marginRight",
-            property: "margin-right",
-            weight: 1
-          },
-          {
-            attribute: "marginBottom",
-            property: "margin-bottom",
-            weight: 0
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: 1
-          }
-        ]
-      },
-      {
-        selector: ".mprs-slider",
-        attributes: [
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: 6
-          },
-          {
-            attribute: "marginRight",
-            property: "margin-right",
-            weight: 10
-          },
-          {
-            attribute: "marginBottom",
-            property: "margin-bottom",
-            weight: 0
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: 10
-          }
-        ]
-      },
-      {
-        selector: ".mprs-track",
-        attributes: [
-          {
-            attribute: "height",
-            property: "height",
-            weight: 2
-          },
-          {
-            attribute: "borderBottomRightRadius",
-            property: "border-bottom-right-radius",
-            weight: 2
-          },
-          {
-            attribute: "borderBottomLeftRadius",
-            property: "border-bottom-left-radius",
-            weight: 2
-          },
-          {
-            attribute: "borderTopRightRadius",
-            property: "border-top-right-radius",
-            weight: 2
-          },
-          {
-            attribute: "borderTopLeftRadius",
-            property: "border-top-left-radius",
-            weight: 2
-          },
-          {
-            attribute: "marginTop",
-            property: "margin-top",
-            weight: 0
-          },
-          {
-            attribute: "marginRight",
-            property: "margin-right",
-            weight: 3
-          },
-          {
-            attribute: "marginBottom",
-            property: "margin-bottom",
-            weight: 6
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: 3
-          }
-        ]
-      },
-      {
-        selector: ".mprs-popup",
-        attributes: [
-          {
-            attribute: "width",
-            property: "width",
-            weight: 10
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 10
-          },
-          {
-            attribute: "lineHeight",
-            property: "line-height",
-            weight: 10
-          }
-        ]
-      },
-      {
-        selector: ".mprs-popup",
-        attributes: [
-          {
-            attribute: "width",
-            property: "width",
-            weight: 10
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 10
-          },
-          {
-            attribute: "lineHeight",
-            property: "line-height",
-            weight: 10
-          }
-        ]
-      },
-      {
-        selector: ".mprs-triangle-target.from",
-        attributes: [
-          {
-            attribute: "top",
-            property: "top",
-            weight: -12
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: -6
-          },
-          {
-            attribute: "width",
-            property: "width",
-            weight: 12
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 12
-          }
-        ]
-      },
-      {
-        selector: ".mprs-triangle-target.from.single",
-        attributes: [
-          {
-            attribute: "top",
-            property: "top",
-            weight: -8.6
-          }
-        ]
-      },
-      {
-        selector: ".mprs-triangle-target.to",
-        attributes: [
-          {
-            attribute: "top",
-            property: "top",
-            weight: 2
-          },
-          {
-            attribute: "marginLeft",
-            property: "margin-left",
-            weight: -6
-          },
-          {
-            attribute: "width",
-            property: "width",
-            weight: 12
-          },
-          {
-            attribute: "height",
-            property: "height",
-            weight: 12
-          }
-        ]
-      }
-    ];
 
     // Initialize settings based on parameters received when a slider is to be created.
     function initSettings(settingsObj) {
@@ -689,6 +341,7 @@ function newMpRangeSlider(parentElement, settings) {
           to = bottomStart;
         }
         if(typeof settingsObj.disabled === "boolean") disabled = settingsObj.disabled;
+        if(typeof settingsObj.enableReset === "boolean") enableReset = settingsObj.enableReset;
         // Let user set sizing parameters
         if(typeof settingsObj.sizing === "string") settingsObj.sizing === "fixed" ? sizing = "fixed" : sizing = "variable";
         if(typeof settingsObj.fixedSize === "number" && settingsObj.fixedSize > 0) fixedSize = settingsObj.fixedSize;
@@ -793,6 +446,15 @@ function newMpRangeSlider(parentElement, settings) {
         parentElement = document.getElementsByTagName("body")[0];
       }
       initSettings(settings);
+      // Check to see if the slider is inside a form element.
+      // If it is, save the original values so that the slider
+      // can be reset to those values if the form gets reset.
+      const parentForm = findParentForm(parentElement);
+      if(parentForm && enableReset) {
+        initialFrom = from;
+        initialTo = to;
+        addResetListener(parentForm);
+      }
       mprsSlider = document.createElement("div");
       mprsSlider.classList.add("mp-range-slider");
       if(disabled) mprsSlider.classList.add("disabled");
@@ -829,9 +491,13 @@ function newMpRangeSlider(parentElement, settings) {
       const fromValueDiv = document.createElement("div");
       fromValueDiv.classList.add("mprs-current-value", "from");
       if(single) fromValueDiv.classList.add("single");
-      fromValueDiv.textContent = from;
+      if(noLabel) fromValueDiv.classList.add("no-label");
+      const fromValue = document.createElement("span");
+      fromValue.classList.add("mprs-value", "from");
+      fromValue.textContent = from;
+      fromValueDiv.appendChild(fromValue);
       if(!disabled) fromValueDiv.setAttribute("tabindex", "0");
-      fromValueDiv.style.fontSize = getAdjustedFontSize(topStart, topEnd) + "%";
+      fromValue.style.fontSize = getAdjustedFontSize(topStart, topEnd) + "%";
       if(hideValues) {
         fromValueDiv.style.display = "none";
       } else {
@@ -843,11 +509,17 @@ function newMpRangeSlider(parentElement, settings) {
 
       const toValueDiv = document.createElement("div");
       toValueDiv.classList.add("mprs-current-value", "to");
-      toValueDiv.textContent = to;
+      if(noLabel) toValueDiv.classList.add("no-label");
+      const toValue = document.createElement("span");
+      toValue.classList.add("mprs-value", "to");
+      toValue.textContent = to;
+      toValueDiv.appendChild(toValue);
       if(!disabled) toValueDiv.setAttribute("tabindex", "0");
-      toValueDiv.style.fontSize = getAdjustedFontSize(bottomStart, bottomEnd) + "%";
-      if(hideValues || single) {
+      toValue.style.fontSize = getAdjustedFontSize(bottomStart, bottomEnd) + "%";
+      if(hideValues) {
         toValueDiv.style.display = "none";
+      } else if(single) {
+        toValueDiv.style.visibility = "hidden";
       } else {
         toValueDiv.onfocus = activateBottom;
         toValueDiv.onblur = deactivate();
@@ -870,7 +542,7 @@ function newMpRangeSlider(parentElement, settings) {
       fromHandleTriangle.classList.add("mprs-triangle", "from");
       if(single) fromHandleTriangle.classList.add("single");
       const fromPopup = document.createElement("div");
-      fromPopup.classList.add("mprs-popup", "mprs-hidden");
+      fromPopup.classList.add("mprs-popup", "mprs-hidden", "from");
       fromHandle.appendChild(fromPopup);
       fromHandle.appendChild(fromHandleTriangle)
       track.appendChild(fromHandle);
@@ -879,9 +551,9 @@ function newMpRangeSlider(parentElement, settings) {
       const toHandleTriangle = document.createElement("div");
       toHandleTriangle.classList.add("mprs-triangle", "to");
       const toPopup = document.createElement("div");
-      toPopup.classList.add("mprs-popup", "mprs-hidden");
-      toHandle.appendChild(toPopup);
+      toPopup.classList.add("mprs-popup", "mprs-hidden", "to");
       toHandle.appendChild(toHandleTriangle);
+      toHandle.appendChild(toPopup);
       track.appendChild(toHandle);
       if(!single) {
         toHandle.onmousedown = btnMouseDown;
@@ -932,12 +604,12 @@ function newMpRangeSlider(parentElement, settings) {
         return `(ranges: ${topStart} to ${topEnd}(top) (step ${incrementTop}) ${bottomStart} to ${bottomEnd}(bottom) (step ${incrementBottom}))`;
       }
     }
-
+    //If the slider boundaries are very large, the values displayed on each side of the slider
+    //will need to use a smaller font size in order to fit in the available space.
     function getAdjustedFontSize(a, b) {
       let lenA = String(a).length;
       let lenB = String(b).length;
       let maxLen = lenA > lenB ? lenA : lenB;
-      let startAdj = 10;
       if(maxLen > 8) {
         return 70;
       }
@@ -972,107 +644,62 @@ function newMpRangeSlider(parentElement, settings) {
     }
     // Start the dragging process.
     function btnMouseDown(e) {
-      if(!disabled ) {
-        moving = true;
-        e.preventDefault();
-        const popup = e.currentTarget.firstElementChild;
+      if(!disabled) {
+        //moving = true;
+        //e.preventDefault();
         const btnDimensions = e.currentTarget.getBoundingClientRect();
         const clickOffset = e.clientX - e.currentTarget.parentElement.getBoundingClientRect().left;
         btnOffset = btnDimensions.left - e.currentTarget.parentElement.getBoundingClientRect().left;
         touchOffset = (clickOffset - btnOffset) - ((btnDimensions.right - btnDimensions.left) / 2);
-        //activeElement = e.currentTarget;
-        numberBuffer = "";
-        if(e.currentTarget.classList.contains("from")) {
-          activateTop();
-          mprsSlider.querySelector(".mprs-current-value.to").classList.remove("active");
-        } else {
-          activateBottom();
-          mprsSlider.querySelector(".mprs-current-value.from").classList.remove("active");
-        }
-        let value = topBottom === "top" ? from : to;
-        if(update !== "onMove") {
-          popup.classList.remove("mprs-hidden");
-          positionPopup(popup, value);
-        }
+        startMove(e);
         document.addEventListener('mouseup', moveEnd);
         document.addEventListener('mousemove', moveButton);
         if(single) mprsSlider.querySelector(".mprs-track").removeEventListener('click', clickTrack);
       }
     }
-
     function btnTouchStart(e) {
       if(!disabled) {
         e.preventDefault();
-        const popup = e.currentTarget.firstElementChild;
         btnOffset = e.currentTarget.getBoundingClientRect().left - e.currentTarget.parentElement.getBoundingClientRect().left;
         touchOffset = e.touches[0].clientX - e.currentTarget.getBoundingClientRect().left;
-        // save reference to the target element and determine whether its the top or bottom handle
-        //activeElement = e.currentTarget;
-        numberBuffer = "";
-        if(e.currentTarget.classList.contains("from")) {
-          activateTop();
-          mprsSlider.querySelector(".mprs-current-value.to").classList.remove("active");
-        } else {
-          activateBottom();
-          mprsSlider.querySelector(".mprs-current-value.from").classList.remove("active");
-        }
-        let value = topBottom === "top" ? from : to;
-        if(update !== "onMove") {
-          popup.classList.remove("mprs-hidden");
-          positionPopup(popup, value);
-        }
+        startMove(e);
         document.addEventListener('touchend', moveEnd);
         document.addEventListener('touchmove', touchMove);
+      }
+    }
+    function startMove(e) {
+      const popup = e.currentTarget.querySelector(".mprs-popup");
+      numberBuffer = "";
+      if(e.currentTarget.classList.contains("from")) {
+        activateTop();
+        mprsSlider.querySelector(".mprs-current-value.to").classList.remove("active");
+      } else {
+        activateBottom();
+        mprsSlider.querySelector(".mprs-current-value.from").classList.remove("active");
+      }
+      let value = topBottom === "top" ? from : to;
+      if(update !== "onMove") {
+        popup.classList.remove("mprs-hidden");
+        popup.textContent = value;
       }
     }
     // Reposition elements as they are dragged and update values.
     function moveButton(e) {
       const offset = activeElement.parentElement.getBoundingClientRect().left;
-      const btnWidth = (activeElement.getBoundingClientRect().right - activeElement.getBoundingClientRect().left) - 2;
-      const otherLeft = (inactiveElement.getBoundingClientRect().left - offset) + (btnWidth / 2);
-      const rangeWidth = (activeElement.parentElement.getBoundingClientRect().right - offset) - 2;
       let newLeft = (e.clientX - offset) - touchOffset;
-      if(newLeft < 0) newLeft = 0;
-      if(newLeft > rangeWidth) newLeft = rangeWidth;
-      if((topBottom === "top" && newLeft > otherLeft) || (topBottom === "bottom" && newLeft < otherLeft)) {
-        if(collision === "stop") {
-          newLeft = otherLeft;
-        } else if(collision === "push"){
-          inactiveElement.style.left = newLeft + "px";
-        }
-      }
-      activeElement.style.left = newLeft + "px";
-
-      let newValue = calculateBtnValue(activeElement);
-      if(topBottom === "top") {
-        from = newValue;
-      } else {
-        to = newValue;
-      }
-      if(collision === "push") {
-        let otherValue = calculateBtnValue(inactiveElement);
-        if(topBottom === "top") {
-          to = otherValue;
-        } else {
-          from = otherValue;
-        }
-      }
-      if(!dual) positionRangeBlock();
-      if(update === "onMove") {
-        updateValueBoxes();
-      } else {
-        positionPopup(activeElement.firstElementChild, newValue);
-      }
-      if(onMove) onMove();
+      sliderMove(newLeft);
     }
-
     function touchMove(e) {
       e.preventDefault();
+      const offset = activeElement.parentElement.getBoundingClientRect().left;
+      let newLeft = (e.touches[0].clientX - offset);
+      sliderMove(newLeft);
+    }
+    function sliderMove(newLeft) {
       const offset = activeElement.parentElement.getBoundingClientRect().left;
       const btnWidth = (activeElement.getBoundingClientRect().right - activeElement.getBoundingClientRect().left) - 2;
       const otherLeft = (inactiveElement.getBoundingClientRect().left - offset) + (btnWidth / 2);
       const rangeWidth = (activeElement.parentElement.getBoundingClientRect().right - offset) - 2;
-      let newLeft = (e.touches[0].clientX - offset);
 
       if(newLeft < 0) newLeft = 0;
       if(newLeft > rangeWidth) newLeft = rangeWidth;
@@ -1103,13 +730,13 @@ function newMpRangeSlider(parentElement, settings) {
       if(update === "onMove") {
         updateValueBoxes();
       } else {
-        positionPopup(activeElement.firstElementChild, newValue);
+        activeElement.querySelector(".mprs-popup").textContent = newValue;
       }
       if(onMove) onMove();
-    }
+    };
     // Reposition slider when track is clicked.
     function clickTrack(e) {
-      if(!disabled && !moving) {
+      if(!disabled) {
         if(!activeElement) activeElement = mprsSlider.querySelector(".mprs-triangle-target.from");
         if(!inactiveElement) inactiveElement = mprsSlider.querySelector(".mprs-triangle-target.to")
         const btnDimensions = activeElement.getBoundingClientRect();
@@ -1130,8 +757,9 @@ function newMpRangeSlider(parentElement, settings) {
         updateValueBoxes();
         if(onMove) onMove();
         if(onUpdate) onUpdate();
-      } else {
-        if(moving) moving = false;
+        setFocus("top");
+        // Prevent moveEnd from performing redundant operations.
+        trackClicked = true;
       }
     }
     // Set focus on current value elements so that keypresses can be processed.
@@ -1144,36 +772,6 @@ function newMpRangeSlider(parentElement, settings) {
         valueDiv = mprsSlider.querySelector(".mprs-current-value.to");
         valueDiv.focus();
       }
-    }
-    // Keep popup element positioned relative to the slider triangle.
-    function positionPopup(popup, value) {
-      let btnDimensions = activeElement.getBoundingClientRect();
-      let popDimensions = popup.getBoundingClientRect();
-      let parentDimensions = activeElement.parentElement.getBoundingClientRect();
-      let otherBtnDim = inactiveElement.getBoundingClientRect();
-      let vpWidth = (window.innerWidth || document.documentElement.clientWidth);
-      let newLeft, newTop, newRange;
-
-      let sliderDimensions = activeElement.parentElement.parentElement.parentElement.parentElement.getBoundingClientRect();
-
-      if(topBottom === "top") {
-        newLeft = popDimensions.width * 1.5;
-        newTop = -(popDimensions.width * .5);
-      } else {
-        newLeft = popDimensions.width * -2;
-        newTop = -((popDimensions.bottom - popDimensions.top) + btnDimensions.height / 2);
-      }
-      // keep popup button within the viewport
-      if(topBottom === "top") {
-        let vpPos = btnDimensions.left + newLeft + 5;
-        if(vpPos + popDimensions.width > sliderDimensions.right) newLeft = newLeft - ((vpPos + popDimensions.width) - sliderDimensions.right);
-      } else {
-        let vpPos = (btnDimensions.left + newLeft)
-        if(vpPos < sliderDimensions.left) newLeft = newLeft + (sliderDimensions.left - vpPos);
-      }
-      popup.style.top = newTop + "px";
-      popup.style.left = newLeft + "px";
-      popup.textContent = value;
     }
     // Keep the range bar (area between sliders) in sync as triangles are dragged.
     function positionRangeBlock(){
@@ -1254,8 +852,8 @@ function newMpRangeSlider(parentElement, settings) {
     // fire its 'change' event incase there are eventListeners listening
     // for that event.
     function updateValueBoxes() {
-      mprsSlider.querySelector(".mprs-current-value.from").textContent = from;
-      mprsSlider.querySelector(".mprs-current-value.to").textContent = to;
+      mprsSlider.querySelector(".mprs-value.from").textContent = from;
+      mprsSlider.querySelector(".mprs-value.to").textContent = to;
       if(fromInputId) {
         const fromInputEle = document.getElementById(fromInputId);
         if(fromInputEle.value != from) {
@@ -1282,55 +880,61 @@ function newMpRangeSlider(parentElement, settings) {
     // Also, fire slider's onUpdate event and update the current value
     // elements if update is set to 'onStop'.
     function moveEnd(e) {
-      const popup = activeElement.firstElementChild;
-      const offset = activeElement.parentElement.getBoundingClientRect().left;
-      const rangeWidth = (activeElement.parentElement.getBoundingClientRect().right - offset)
-      const activeLeft = activeElement.getBoundingClientRect().left - offset;
-      const inactiveLeft = inactiveElement.getBoundingClientRect().left - offset;
-      popup.style.left = 0;
-      popup.style.top = 0;
-      popup.classList.add("mprs-hidden");
-      document.removeEventListener('mouseup', moveEnd);
-      document.removeEventListener('mousemove', moveButton);
-      document.removeEventListener('touchend', moveEnd);
-      document.removeEventListener('touchmove', touchMove);
-      numberBuffer = "";
-      // change button positions to percentages so that they will scale properly
-      let newValue, otherValue;
-      if(topBottom === "top") {
-        newValue = from;
-        otherValue = to;
-        setFocus("top");
-      } else {
-        newValue = to;
-        otherValue = from;
-        setFocus("bottom");
-      }
-      let activePercent, inactivePercent;
-      if(topBottom === "top") {
-        activePercent = ((Math.abs(newValue - topStart) / topRange) * 100).toPrecision(4);
-        inactivePercent = ((Math.abs(otherValue - bottomStart) / bottomRange) * 100).toPrecision(4);
-      } else {
-        activePercent = ((Math.abs(newValue - bottomStart) / bottomRange) * 100).toPrecision(4);
-        inactivePercent = ((Math.abs(otherValue - topStart) / topRange) * 100).toPrecision(4);
-      }
-      activeElement.style.left = activePercent + "%";
-      inactiveElement.style.left = inactivePercent + "%";
-      if(!dual) {
-        const rangeBlock = activeElement.parentElement.querySelector(".mprs-range-block");
-        rangeBlock.classList.remove("mprs-hidden");
-        let newMargin = activePercent - inactivePercent < 0 ? activePercent : inactivePercent;
-        rangeBlock.style.marginLeft = newMargin +"%";
-        rangeBlock.style.width = Math.abs(activePercent - inactivePercent) + "%";
-        if(!single && ((activePercent - inactivePercent > 0 && topBottom === "top") || (activePercent - inactivePercent < 0 && topBottom === "bottom"))) {
-          rangeBlock.classList.add("mprs-inverted-range");
+        const popup = activeElement.querySelector(".mprs-popup");
+        const offset = activeElement.parentElement.getBoundingClientRect().left;
+        const rangeWidth = (activeElement.parentElement.getBoundingClientRect().right - offset)
+        const activeLeft = activeElement.getBoundingClientRect().left - offset;
+        const inactiveLeft = inactiveElement.getBoundingClientRect().left - offset;
+        popup.classList.add("mprs-hidden");
+        document.removeEventListener('mouseup', moveEnd);
+        document.removeEventListener('mousemove', moveButton);
+        document.removeEventListener('touchend', moveEnd);
+        document.removeEventListener('touchmove', touchMove);
+      // If the slider was moved by the clickTrack function, all of this has already been
+      // done, so don't do it again.
+      if(!trackClicked) {
+        numberBuffer = "";
+        // change button positions to percentages so that they will scale properly
+        let newValue, otherValue;
+        if(topBottom === "top") {
+          newValue = from;
+          otherValue = to;
+          setFocus("top");
         } else {
-          rangeBlock.classList.remove("mprs-inverted-range");
+          newValue = to;
+          otherValue = from;
+          setFocus("bottom");
         }
+        let activePercent, inactivePercent;
+        if(topBottom === "top") {
+          activePercent = ((Math.abs(newValue - topStart) / topRange) * 100).toPrecision(4);
+          inactivePercent = ((Math.abs(otherValue - bottomStart) / bottomRange) * 100).toPrecision(4);
+        } else {
+          activePercent = ((Math.abs(newValue - bottomStart) / bottomRange) * 100).toPrecision(4);
+          inactivePercent = ((Math.abs(otherValue - topStart) / topRange) * 100).toPrecision(4);
+        }
+        activeElement.style.left = activePercent + "%";
+        inactiveElement.style.left = inactivePercent + "%";
+        if(!dual) {
+          const rangeBlock = activeElement.parentElement.querySelector(".mprs-range-block");
+          rangeBlock.classList.remove("mprs-hidden");
+          let newMargin = activePercent - inactivePercent < 0 ? activePercent : inactivePercent;
+          rangeBlock.style.marginLeft = newMargin +"%";
+          rangeBlock.style.width = Math.abs(activePercent - inactivePercent) + "%";
+          if(!single && ((activePercent - inactivePercent > 0 && topBottom === "top") || (activePercent - inactivePercent < 0 && topBottom === "bottom"))) {
+            rangeBlock.classList.add("mprs-inverted-range");
+          } else {
+            rangeBlock.classList.remove("mprs-inverted-range");
+          }
+        }
+        if(update !== "onMove") {
+          updateValueBoxes();
+        }
+        if(onUpdate) onUpdate();
+      } else {
+        trackClicked = false;
       }
-      if(update !== "onMove") updateValueBoxes();
-      if(onUpdate) onUpdate();
-      if(!single) moving = false;
+
     }
     // Slider values can be changed using keypresses when they have focus.
     function processKeyPress() {
@@ -1490,7 +1094,7 @@ function newMpRangeSlider(parentElement, settings) {
     function addNumber(number) {
       let valueDiv;
       if(topBottom === "top") {
-        valueDiv = mprsSlider.querySelector(".mprs-current-value.from");
+        valueDiv = mprsSlider.querySelector(".mprs-value.from");
         if(number === "-" && (numberBuffer.length > 0 || (topStart > 0 && topEnd > 0))) {
           blink(valueDiv);
           return;
@@ -1523,7 +1127,7 @@ function newMpRangeSlider(parentElement, settings) {
         numberBuffer = numberBuffer + number;
         valueDiv.textContent = numberBuffer;
       } else {
-        valueDiv = mprsSlider.querySelector(".mprs-current-value.to");
+        valueDiv = mprsSlider.querySelector(".mprs-value.to");
         if(number === "-" && (numberBuffer.length > 0 || (bottomStart > 0 && bottomEnd > 0))) {
           blink(valueDiv);
           return;
@@ -1639,53 +1243,25 @@ function newMpRangeSlider(parentElement, settings) {
       // get width of slider if possible
       let sliderWidth = w || mprsSlider.getBoundingClientRect().width;
       if(!sliderWidth && sizing !== "fixed") return false; // use CSS rules
-      // Each element has a weight assigned in order to keep proper proportions.
-      // By default, a weightFactor of 1 represents 1% of the width of the control's
-      // main div element. The main element's font-size has a weight or 4. Using that
-      // weight and the fixed, minimum, and maximum font sizes, which are in pixels,
-      // we can calculate a weightFactor that will keep the font size within the
-      // specified range. That weightFactor can then be applied to all other sized
-      // elements. The "sizingFactor" influences the rate at which the sizes will
-      // change as the width of the control changes (the slope of the curve);
+      //Elements are all sized using "em" units. Changing the font-size of
+      //the main sllider div will cause all other elements to resize in
+      //proportion. The sizing factor will influence the sizing curve so
+      //that a higher factor will cause the elements to grow sooner.
       let weightFactor;
       if(sizing === "fixed" || !sliderWidth) {
-        weightFactor = fixedSize / 4;
+        weightFactor = fixedSize;
       } else if(sizingFactor !== 1){
-        weightFactor = .01 * sliderWidth * sizingFactor;
+        weightFactor = .04 * sliderWidth * sizingFactor;
       } else {
-        weightFactor = .01 * sliderWidth;
+        weightFactor = .04 * sliderWidth;
       }
-      if(weightFactor * 4 < variableMin) {
-        weightFactor = variableMin / 4;
+      if(weightFactor < variableMin || weightFactor > variableMax) {
+        weightFactor = weightFactor < variableMin ? variableMin : variableMax;
       }
-      if(weightFactor * 4 > variableMax) {
-        weightFactor = variableMax / 4;
-      }
-      if(sliderWidth && (weightFactor * 4) / sliderWidth > .13) {
+      if(sliderWidth && (weightFactor) / sliderWidth > .13) {
         weightFactor = weightFactor * .7;
       }
-      let target;
-      // iterate through all elements and adjust sizes based on the slider width
-      sizeTable.forEach((item, i) => {
-        let compensateForNoLabel = false;
-        if(item["selector"] === ".mp-range-slider") {
-          target = [mprsSlider];
-        } else {
-          target = mprsSlider.querySelectorAll(item["selector"]);
-        }
-        // If there is no lable or range description above the slider, the value elements at each end
-        // will be out of alignment. Changing the "weight" of their top margin will realign them.
-        if(noLabel && (item["selector"] === ".mprs-current-value.to" || item["selector"] === ".mprs-current-value.from" || item["selector"] === ".mprs-current-value.from.single")) {
-          compensateForNoLabel = true;
-        }
-        for(let x = 0; x < target.length; x++) {
-          item["attributes"].forEach((item, i) => {
-            let adjust = 0;
-            if(compensateForNoLabel && item["attribute"] === "marginTop") adjust = -4;
-            target[x].style[item["attribute"]] = ((item["weight"] + adjust) * weightFactor) + "px";
-          });
-        }
-      });
+      mprsSlider.style.fontSize = weightFactor + "px";
     }
 
     function disable(bool) {
@@ -1705,7 +1281,6 @@ function newMpRangeSlider(parentElement, settings) {
     }
 
     function set(settings) {
-
       let newSettings = cleanSettings(settings);
       if(newSettings) {
         // make sure only allowed properties are in settings
@@ -1739,6 +1314,16 @@ function newMpRangeSlider(parentElement, settings) {
         const sliderLabel = mprsSlider.querySelector(".mprs-title");
         if(sliderLabel.textContent !== label) {
           sliderLabel.textContent = label;
+        }
+        const valueDivs = mprsSlider.querySelectorAll(".mprs-current-value");
+        if(!label && !labelRange) {
+          for(let i = 0; i < valueDivs.length; i++) {
+            valueDivs[i].classList.add("no-label");
+          }
+        } else {
+          for(let i = 0; i < valueDivs.length; i++) {
+            valueDivs[i].classList.remove("no-label");
+          }
         }
         setButtons();
         updateValueBoxes();
@@ -1778,6 +1363,25 @@ function newMpRangeSlider(parentElement, settings) {
 
     function isEmpty(object) {
       for(var i in object) { return false; } return true;
+    }
+
+    function findParentForm(ele) {
+      while(ele !== null) {
+        if(ele.tagName === "FORM") return ele;
+        ele = ele.parentElement;
+      }
+      return null;
+    }
+
+    function addResetListener(ele) {
+      ele.addEventListener('reset', resetToInitial);
+    }
+
+    function resetToInitial() {
+      set({
+        from: initialFrom,
+        to: initialTo
+      });
     }
 
     return create(parentElement, settings);
